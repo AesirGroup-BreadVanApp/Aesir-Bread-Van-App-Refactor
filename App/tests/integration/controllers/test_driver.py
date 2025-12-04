@@ -16,7 +16,7 @@ def test_schedule_drive(db_session, driver_user, area, street):
     time = "10:00"
     # Act
     drive = schedule_drive(
-        driver_user.id, area.id, street.id, date, time, DriveStatus.SCHEDULED
+        driver_user.id, area.id, street.id, date, time, DriveStatus.SCHEDULED, items=[]
     )
 
     # Assert
@@ -32,14 +32,14 @@ def test_schedule_drive_past_date(db_session, driver_user, area, street):
     # Act & Assert
     with pytest.raises(ValidationError):
         schedule_drive(
-            driver_user.id, area.id, street.id, date, time, DriveStatus.SCHEDULED
+            driver_user.id, area.id, street.id, date, time, DriveStatus.SCHEDULED, items=[]
         )
 
 
 def test_view_drives(db_session, driver_user, area, street):
     # Arrange
     schedule_drive(
-        driver_user.id, area.id, street.id, "2030-01-01", "10:00", DriveStatus.SCHEDULED
+        driver_user.id, area.id, street.id, "2030-01-01", "10:00", DriveStatus.SCHEDULED, items=[]
     )
 
     # Act
@@ -52,7 +52,7 @@ def test_view_drives(db_session, driver_user, area, street):
 def test_start_drive(db_session, driver_user, area, street):
     # Arrange
     drive = schedule_drive(
-        driver_user.id, area.id, street.id, "2030-01-01", "10:00", DriveStatus.SCHEDULED
+        driver_user.id, area.id, street.id, "2030-01-01", "10:00", DriveStatus.SCHEDULED, items=[]
     )
 
     # Act
@@ -65,7 +65,7 @@ def test_start_drive(db_session, driver_user, area, street):
 def test_complete_drive(db_session, driver_user, area, street):
     # Arrange
     drive = schedule_drive(
-        driver_user.id, area.id, street.id, "2030-01-01", "10:00", DriveStatus.SCHEDULED
+        driver_user.id, area.id, street.id, "2030-01-01", "10:00", DriveStatus.SCHEDULED, items=[]
     )
 
     # Act

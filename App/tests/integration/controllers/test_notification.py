@@ -1,6 +1,5 @@
 import pytest
-from App.controllers.notification import get_notification_history
-from App.models import Notification
+from App.controllers.notification import get_notification_history, mark_notification_as_read
 from App.models import Notification
 from App.exceptions import ValidationError
 from datetime import datetime
@@ -23,14 +22,13 @@ def test_get_notification_history(db_session, resident_user):
 
     # Assert
     assert len(history) == 2
-    assert history[0]["message"] == "Message 1"
-    assert history[1]["message"] == "Message 2"
+    # History returns Notification objects now, not dicts
+    assert history[0].message == "Message 1"
+    assert history[1].message == "Message 2"
 
 
 def test_mark_notification_as_read(db_session, resident_user):
     # Arrange
-    from App.controllers.notification import mark_notification_as_read
-
     msg = Notification(
         resident_id=resident_user.id, message="Message 1", timestamp=datetime.now()
     )
@@ -47,8 +45,6 @@ def test_mark_notification_as_read(db_session, resident_user):
 
 def test_mark_notification_as_read_unauthorized(db_session, resident_user):
     # Arrange
-    from App.controllers.notification import mark_notification_as_read
-
     # Create another resident
     from App.controllers.resident import create_resident
     from App.controllers.area import create_area

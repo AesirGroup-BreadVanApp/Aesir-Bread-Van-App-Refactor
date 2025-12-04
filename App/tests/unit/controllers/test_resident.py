@@ -10,13 +10,12 @@ def test_create_resident_success(mocker):
     street_id = 1
     house_number = 101
 
-    MockUser = mocker.patch("App.controllers.resident.User")
     MockArea = mocker.patch("App.controllers.resident.Area")
     MockStreet = mocker.patch("App.controllers.resident.Street")
     MockResident = mocker.patch("App.controllers.resident.Resident")
     mock_session = mocker.patch("App.controllers.resident.db.session")
 
-    MockUser.query.filter_by.return_value.first.return_value = None
+    MockResident.query.filter_by.return_value.first.return_value = None
     MockArea.query.filter_by.return_value.first.return_value = mocker.Mock()
     MockStreet.query.filter_by.return_value.first.return_value = mocker.Mock()
 
@@ -35,8 +34,8 @@ def test_create_resident_success(mocker):
 def test_create_resident_duplicate(mocker):
     # Arrange
     username = "testresident"
-    MockUser = mocker.patch("App.controllers.resident.User")
-    MockUser.query.filter_by.return_value.first.return_value = mocker.Mock()
+    MockResident = mocker.patch("App.controllers.resident.Resident")
+    MockResident.query.filter_by.return_value.first.return_value = mocker.Mock()
 
     # Act & Assert
     with pytest.raises(DuplicateEntity):
@@ -59,7 +58,7 @@ def test_update_resident_username_success(mocker):
     result = update_resident_username(resident_id, new_username)
 
     # Assert
-    assert result is True
+    assert result == mock_resident
     assert mock_resident.username == new_username
     mock_session.commit.assert_called_once()
 
@@ -70,7 +69,7 @@ def test_delete_resident_success(mocker):
     
     MockResident = mocker.patch("App.controllers.resident.Resident")
     mock_session = mocker.patch("App.controllers.resident.db.session")
-    mock_session.get.return_value = mock_resident
+    MockResident.query.get.return_value = mock_resident
 
     # Act
     result = delete_resident(resident_id)

@@ -33,7 +33,7 @@ def test_schedule_drive_success(mocker, date_str, time_str):
     MockDrive.query.filter_by.return_value.first.return_value = None # No existing drive
 
     # Act
-    result = schedule_drive(driver_id, area_id, street_id, date_str, time_str, status)
+    result = schedule_drive(driver_id, area_id, street_id, date_str, time_str, status, items=[])
 
     # Assert
     # Verify Drive constructor was called with correct arguments
@@ -63,7 +63,7 @@ def test_schedule_drive_past_date(mocker):
 
     # Act & Assert
     with pytest.raises(ValidationError) as exc_info:
-        schedule_drive(driver_id, area_id, street_id, date_str, time_str, status)
+        schedule_drive(driver_id, area_id, street_id, date_str, time_str, status, items=[])
     
     assert "Cannot schedule a drive in the past" in str(exc_info.value)
 

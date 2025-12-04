@@ -1,6 +1,6 @@
 import pytest
 from App.controllers.subscription import subscribe_to_street, unsubscribe_from_street
-from App.exceptions import ResourceNotFound
+from App.exceptions import ResourceNotFound, ValidationError
 
 def test_subscribe_to_street_new(mocker):
     # Arrange
@@ -31,12 +31,9 @@ def test_subscribe_to_street_existing(mocker):
     
     MockSubscription.query.filter_by.return_value.first.return_value = mock_existing
 
-    # Act
-    result = subscribe_to_street(resident_id, street_id)
-
-    # Assert
-    assert result == mock_existing
-    mock_session.add.assert_not_called()
+    # Act & Assert
+    with pytest.raises(ValidationError):
+        subscribe_to_street(resident_id, street_id)
 
 def test_unsubscribe_from_street_success(mocker):
     # Arrange
