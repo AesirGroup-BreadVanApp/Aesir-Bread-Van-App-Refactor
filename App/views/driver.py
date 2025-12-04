@@ -155,7 +155,7 @@ def update_street_api():
         return jsonify(error="Forbidden"), 403
     data = request.json
     try:
-        driver = update_street_id(current_user.id, data["street_id"])
+        driver = update_street_info(current_user.id, data["street_id"])
         return jsonify(message="Street updated", street=driver.street.get_json()), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
