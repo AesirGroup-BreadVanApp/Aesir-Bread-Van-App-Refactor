@@ -1,16 +1,16 @@
 import pytest
-from App.controllers.drive import create_drive, get_all_drives, add_drive_item
+from App.controllers.drive import schedule_drive, view_drives, add_drive_item
 from App.models import Drive, Item, DriveItem
 from datetime import datetime
 
 
-def test_create_drive(db_session, driver_user, area, street):
+def test_schedule_drive(db_session, driver_user, area, street):
     # Arrange
-    date_str = "2023-12-25"
+    date_str = "2026-12-25"
     time_str = "10:00"
     status = "Scheduled"
     # Act
-    drive = create_drive(driver_user.id, area.id, street.id, date_str, time_str, status)
+    drive = schedule_drive(driver_user.id, area.id, street.id, date_str, time_str, status, items=[])
 
     # Assert
     assert drive.driver_id == driver_user.id
@@ -23,13 +23,13 @@ def test_create_drive(db_session, driver_user, area, street):
     assert Drive.query.get(drive.id) is not None
 
 
-def test_get_all_drives(db_session, driver_user, area, street):
+def test_view_drives(db_session, driver_user, area, street):
     # Arrange
-    create_drive(driver_user.id, area.id, street.id, "2023-12-25", "10:00", "Scheduled")
-    create_drive(driver_user.id, area.id, street.id, "2023-12-26", "11:00", "Scheduled")
+    schedule_drive(driver_user.id, area.id, street.id, "2026-12-25", "10:00", "Scheduled", items=[])
+    schedule_drive(driver_user.id, area.id, street.id, "2026-12-26", "11:00", "Scheduled", items=[])
 
     # Act
-    drives = get_all_drives()
+    drives = view_drives(driver_user.id)
 
     # Assert
     assert len(drives) == 2
@@ -37,15 +37,15 @@ def test_get_all_drives(db_session, driver_user, area, street):
 
 def test_add_drive_item(db_session, driver_user, area, street):
     # Arrange
-    drive = create_drive(
-        driver_user.id, area.id, street.id, "2023-12-25", "10:00", "Scheduled"
+    drive = schedule_drive(
+        driver_user.id, area.id, street.id, "2026-12-25", "10:00", "Scheduled", items=[]
     )
     item = Item(name="Bread", price=2.50, description="Fresh Bread", tags=[])
     db_session.session.add(item)
     db_session.session.commit()
 
     # Act
-    drive_item = add_drive_item(drive.id, item.id, 10)
+    drive_item = add_drive_item(driver_user.id, drive.id, item.id, 10)
 
     # Assert
     assert drive_item.drive_id == drive.id

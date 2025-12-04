@@ -22,7 +22,7 @@ def test_notify_subscribers(mocker):
     MockSubscription.query.filter_by.return_value.all.return_value = [sub1, sub2]
 
     # Act
-    notify_subscribers(drive)
+    notify_subscribers(drive, "Test Message")
 
     # Assert
     assert MockNotification.call_count == 2
