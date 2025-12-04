@@ -12,6 +12,35 @@
 			"item": [
 				{
 					"name": "Get Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    pm.expect(json).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Users have id and username\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    if (json.length > 0) {\r",
+									"        pm.expect(json[0]).to.have.property(\"id\");\r",
+									"        pm.expect(json[0]).to.have.property(\"username\");\r",
+									"    }\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -24,12 +53,41 @@
 								"api",
 								"users"
 							]
-						}
+						},
+						"description": "Returns a list of all users."
 					},
 					"response": []
 				},
 				{
 					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 or 201\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has a message\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    pm.expect(json).to.have.property(\"message\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Message contains username\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    const body = pm.request.body.raw;\r",
+									"    const sent = JSON.parse(body);\r",
+									"    pm.expect(json.message).to.include(sent.username);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -51,7 +109,8 @@
 								"api",
 								"users"
 							]
-						}
+						},
+						"description": "Creates a new user with the given username and password."
 					},
 					"response": []
 				}
@@ -67,10 +126,30 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Save access_token to environment variable if present\r",
 									"let response = pm.response.json();\r",
-									"if(response.access_token){\r",
+									"if (response.access_token) {\r",
 									"    pm.environment.set(\"jwt_token\", response.access_token);\r",
 									"}\r",
+									"\r",
+									"// Check status code\r",
+									"pm.test(\"Status is 200 or 401\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401]);\r",
+									"});\r",
+									"\r",
+									"// Check response for successful login\r",
+									"pm.test(\"Response has access_token on success\", function () {\r",
+									"    if (pm.response.code === 200) {\r",
+									"        pm.expect(response).to.have.property(\"access_token\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Check error message for failed login\r",
+									"pm.test(\"Error message on failure\", function () {\r",
+									"    if (pm.response.code === 401) {\r",
+									"        pm.expect(response).to.have.property(\"message\", \"bad username or password given\");\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -100,7 +179,8 @@
 								"api",
 								"login"
 							]
-						}
+						},
+						"description": "Logs a user in using username and password.  \nReturns a JWT access_token on success.  \nReturns 401 if credentials are invalid."
 					},
 					"response": []
 				},
@@ -111,6 +191,26 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Check status code\r",
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Check response has message including username and id\r",
+									"pm.test(\"Response contains username and id\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    pm.expect(json).to.have.property(\"message\");\r",
+									"    pm.expect(json.message).to.include(\"username:\");\r",
+									"    pm.expect(json.message).to.include(\"id :\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Unauthorized if no token\r",
+									"pm.test(\"Unauthorized if no token\", function () {\r",
+									"    if (!pm.environment.get(\"jwt_token\")) {\r",
+									"        pm.expect(pm.response.code).to.eql(401);\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -137,12 +237,39 @@
 								"api",
 								"identify"
 							]
-						}
+						},
+						"description": "Returns information about the currently logged-in user.  \nRequires JWT authentication via the access_token saved in the environment variable `jwt_token`."
 					},
 					"response": []
 				},
 				{
 					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Status code\r",
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Response contains logout message\r",
+									"pm.test(\"Response has logout message\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    pm.expect(json).to.have.property(\"message\", \"Logged Out!\");\r",
+									"});\r",
+									"\r",
+									"// Optional: clear JWT environment variable\r",
+									"pm.environment.unset(\"jwt_token\");\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -161,7 +288,8 @@
 								"api",
 								"logout"
 							]
-						}
+						},
+						"description": "Logs out the current user by clearing JWT cookies (if used) or ending the session.  \nReturns a message confirming logout."
 					},
 					"response": []
 				}
@@ -177,10 +305,30 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Save access_token to environment variable if present\r",
 									"let response = pm.response.json();\r",
 									"if(response.access_token){\r",
 									"    pm.environment.set(\"jwt_admin_token\", response.access_token);\r",
 									"}\r",
+									"\r",
+									"// Check status code\r",
+									"pm.test(\"Status is 200 or 401\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401]);\r",
+									"});\r",
+									"\r",
+									"// Check response for successful login\r",
+									"pm.test(\"Response has access_token on success\", function () {\r",
+									"    if (pm.response.code === 200) {\r",
+									"        pm.expect(response).to.have.property(\"access_token\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Check error message for failed login\r",
+									"pm.test(\"Error message on failure\", function () {\r",
+									"    if (pm.response.code === 401) {\r",
+									"        pm.expect(response).to.have.property(\"message\", \"bad username or password given\");\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -210,12 +358,54 @@
 								"api",
 								"login"
 							]
-						}
+						},
+						"description": "Logs an admin user iin using username and password.  \nReturns a JWT access_token on success.  \nReturns 401 if credentials are invalid."
 					},
 					"response": []
 				},
 				{
 					"name": "Create Areas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"// Status code\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403, 409]);\r",
+									"});\r",
+									"\r",
+									"// Success\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has expected area fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"id\");\r",
+									"        pm.expect(json).to.have.property(\"name\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Errors\r",
+									"if ([400, 403, 409].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -244,12 +434,49 @@
 								"admin",
 								"areas"
 							]
-						}
+						},
+						"description": "Create a new area. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get All Areas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 403) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -286,12 +513,49 @@
 								"admin",
 								"areas"
 							]
-						}
+						},
+						"description": "Fetch all areas. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Delete Area",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Area deleted\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -321,12 +585,54 @@
 								"areas",
 								"2"
 							]
-						}
+						},
+						"description": "Delete an area by ID. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Create Streets",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403, 409]);\r",
+									"});\r",
+									"\r",
+									"// Success\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has expected street fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"id\");\r",
+									"        pm.expect(json).to.have.property(\"name\");\r",
+									"        pm.expect(json).to.have.property(\"area_id\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Errors\r",
+									"if ([400, 403, 409].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -360,12 +666,49 @@
 								"admin",
 								"streets"
 							]
-						}
+						},
+						"description": "Create a new street. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get All Streets",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 403) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -397,12 +740,49 @@
 								"admin",
 								"streets"
 							]
-						}
+						},
+						"description": "Fetch all streets. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Delete Street",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Street deleted\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -432,12 +812,57 @@
 								"streets",
 								"3"
 							]
-						}
+						},
+						"description": "Delete a street by ID. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Create Residents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"// Status code\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403, 409]);\r",
+									"});\r",
+									"\r",
+									"// Success\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has expected resident fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"id\");\r",
+									"        pm.expect(json).to.have.property(\"username\");\r",
+									"        pm.expect(json).to.have.property(\"area_id\");\r",
+									"        pm.expect(json).to.have.property(\"street_id\");\r",
+									"        pm.expect(json).to.have.property(\"house_number\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Error\r",
+									"if ([400, 403, 409].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -471,12 +896,49 @@
 								"admin",
 								"residents"
 							]
-						}
+						},
+						"description": "Create a new resident. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get All Residents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 403) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -508,12 +970,49 @@
 								"admin",
 								"residents"
 							]
-						}
+						},
+						"description": "Fetch all residents. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Delete Resident",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Resident deleted\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -543,12 +1042,57 @@
 								"residents",
 								"5"
 							]
-						}
+						},
+						"description": "Delete a resident by ID. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Create Driver",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"// Status code\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403, 409]);\r",
+									"});\r",
+									"\r",
+									"// Success response\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has expected driver fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"id\");\r",
+									"        pm.expect(json).to.have.property(\"username\");\r",
+									"        pm.expect(json).to.have.property(\"status\");\r",
+									"        pm.expect(json).to.have.property(\"area_id\");\r",
+									"        pm.expect(json).to.have.property(\"street_id\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Errors: validation, forbidden, duplicate\r",
+									"if ([400, 403, 409].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -577,15 +1121,53 @@
 								"admin",
 								"drivers"
 							]
-						}
+						},
+						"description": "Creates a new driver. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get All Drivers",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"// Status code\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);\r",
+									"});\r",
+									"\r",
+									"// Response should be array\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Forbidden\r",
+									"if (pm.response.code === 403) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -600,10 +1182,6 @@
 								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{base_url}}/api/admin/drivers",
 							"host": [
@@ -614,12 +1192,53 @@
 								"admin",
 								"drivers"
 							]
-						}
+						},
+						"description": "Fetch all drivers. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Delete Driver",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"// Status code\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"// Success\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Driver deleted\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Errors\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -649,7 +1268,8 @@
 								"drivers",
 								"5"
 							]
-						}
+						},
+						"description": "Delete a driver by ID. Admin role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				}
@@ -665,10 +1285,30 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Save access_token to environment variable if present\r",
 									"let response = pm.response.json();\r",
 									"if(response.access_token){\r",
 									"    pm.environment.set(\"jwt_driver_token\", response.access_token);\r",
 									"}\r",
+									"\r",
+									"// Check status code\r",
+									"pm.test(\"Status is 200 or 401\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401]);\r",
+									"});\r",
+									"\r",
+									"// Check response for successful login\r",
+									"pm.test(\"Response has access_token on success\", function () {\r",
+									"    if (pm.response.code === 200) {\r",
+									"        pm.expect(response).to.have.property(\"access_token\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Check error message for failed login\r",
+									"pm.test(\"Error message on failure\", function () {\r",
+									"    if (pm.response.code === 401) {\r",
+									"        pm.expect(response).to.have.property(\"message\", \"bad username or password given\");\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -698,12 +1338,54 @@
 								"api",
 								"login"
 							]
-						}
+						},
+						"description": "Logs a driver user in using username and password.  \nReturns a JWT access_token on success.  \nReturns 401 if credentials are invalid."
 					},
 					"response": []
 				},
 				{
 					"name": "Schedule Drive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has expected drive fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"id\");\r",
+									"        pm.expect(json).to.have.property(\"driver_id\");\r",
+									"        pm.expect(json).to.have.property(\"area_id\");\r",
+									"        pm.expect(json).to.have.property(\"street_id\");\r",
+									"        pm.expect(json).to.have.property(\"status\");\r",
+									"        pm.expect(json).to.have.property(\"items\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([400, 403].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -732,12 +1414,49 @@
 								"driver",
 								"schedule-drive"
 							]
-						}
+						},
+						"description": "Schedule a new drive for the logged-in driver. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get All Drives",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -762,12 +1481,52 @@
 								"driver",
 								"drives"
 							]
-						}
+						},
+						"description": "Fetch all drives for the logged-in driver. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Start a Drive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and drive fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"        pm.expect(json).to.have.property(\"drive\");\r",
+									"        pm.expect(json.drive).to.have.property(\"id\");\r",
+									"        pm.expect(json.drive).to.have.property(\"status\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -789,12 +1548,52 @@
 								"1",
 								"start"
 							]
-						}
+						},
+						"description": "Start a scheduled drive. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Complete a Drive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and drive fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Drive completed\");\r",
+									"        pm.expect(json).to.have.property(\"drive\");\r",
+									"        pm.expect(json.drive).to.have.property(\"id\");\r",
+									"        pm.expect(json.drive).to.have.property(\"status\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -816,12 +1615,52 @@
 								"1",
 								"complete"
 							]
-						}
+						},
+						"description": "Mark a drive as completed. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Cancel Drive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and drive fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Drive cancelled\");\r",
+									"        pm.expect(json).to.have.property(\"drive\");\r",
+									"        pm.expect(json.drive).to.have.property(\"id\");\r",
+									"        pm.expect(json.drive).to.have.property(\"status\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -843,12 +1682,53 @@
 								"1",
 								"cancel"
 							]
-						}
+						},
+						"description": "Cancel a drive. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Add Drive Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 401, 403, 404, 409]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has message and drive_item fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Drive item added\");\r",
+									"        pm.expect(json).to.have.property(\"drive_item\");\r",
+									"        pm.expect(json.drive_item).to.have.property(\"id\");\r",
+									"        pm.expect(json.drive_item).to.have.property(\"item_id\");\r",
+									"        pm.expect(json.drive_item).to.have.property(\"quantity\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404, 409].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -884,12 +1764,53 @@
 								"1",
 								"remove-item"
 							]
-						}
+						},
+						"description": "Add an item to a drive. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Remove Drive Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and drive_item fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Drive item removed\");\r",
+									"        pm.expect(json).to.have.property(\"drive_item\");\r",
+									"        pm.expect(json.drive_item).to.have.property(\"id\");\r",
+									"        pm.expect(json.drive_item).to.have.property(\"item_id\");\r",
+									"        pm.expect(json.drive_item).to.have.property(\"quantity\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -925,12 +1846,50 @@
 								"1",
 								"remove-item"
 							]
-						}
+						},
+						"description": "Remove an item from a drive. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Driver Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and status\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Status updated\");\r",
+									"        pm.expect(json).to.have.property(\"status\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -959,12 +1918,52 @@
 								"driver",
 								"status"
 							]
-						}
+						},
+						"description": "Update driver status (e.g., On Duty, Off Duty). Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Area",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and area\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Area updated\");\r",
+									"        pm.expect(json).to.have.property(\"area\");\r",
+									"        pm.expect(json.area).to.have.property(\"id\");\r",
+									"        pm.expect(json.area).to.have.property(\"name\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -998,12 +1997,52 @@
 								"driver",
 								"update-area"
 							]
-						}
+						},
+						"description": "Update driver's assigned area. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Street",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and street\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Street updated\");\r",
+									"        pm.expect(json).to.have.property(\"street\");\r",
+									"        pm.expect(json.street).to.have.property(\"id\");\r",
+									"        pm.expect(json.street).to.have.property(\"name\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1037,12 +2076,50 @@
 								"driver",
 								"update-street"
 							]
-						}
+						},
+						"description": "Update driver's assigned street. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Username",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and username\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Username updated\");\r",
+									"        pm.expect(json).to.have.property(\"username\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1076,12 +2153,50 @@
 								"driver",
 								"update-username"
 							]
-						}
+						},
+						"description": "Update driver's username. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Username Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and username\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Username updated\");\r",
+									"        pm.expect(json).to.have.property(\"username\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1115,7 +2230,8 @@
 								"driver",
 								"update-username"
 							]
-						}
+						},
+						"description": "Update driver's username. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				}
@@ -1131,10 +2247,30 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Save access_token to environment variable if present\r",
 									"let response = pm.response.json();\r",
 									"if(response.access_token){\r",
 									"    pm.environment.set(\"jwt_resident_token\", response.access_token);\r",
 									"}\r",
+									"\r",
+									"// Check status code\r",
+									"pm.test(\"Status is 200 or 401\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401]);\r",
+									"});\r",
+									"\r",
+									"// Check response for successful login\r",
+									"pm.test(\"Response has access_token on success\", function () {\r",
+									"    if (pm.response.code === 200) {\r",
+									"        pm.expect(response).to.have.property(\"access_token\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Check error message for failed login\r",
+									"pm.test(\"Error message on failure\", function () {\r",
+									"    if (pm.response.code === 401) {\r",
+									"        pm.expect(response).to.have.property(\"message\", \"bad username or password given\");\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -1164,12 +2300,52 @@
 								"api",
 								"login"
 							]
-						}
+						},
+						"description": "Logs a resident user in using username and password.  \nReturns a JWT access_token on success.  \nReturns 401 if credentials are invalid."
 					},
 					"response": []
 				},
 				{
 					"name": "Request Stop",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has stop request fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"id\");\r",
+									"        pm.expect(json).to.have.property(\"resident_id\");\r",
+									"        pm.expect(json).to.have.property(\"drive_id\");\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([400, 403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -1198,12 +2374,49 @@
 								"resident",
 								"stops"
 							]
-						}
+						},
+						"description": "Create a stop request for a drive. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get Stop Requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -1223,12 +2436,49 @@
 								"resident",
 								"stops"
 							]
-						}
+						},
+						"description": "Get all stop requests created by the logged-in resident.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Cancel Stop Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Stop request cancelled\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([400, 403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -1249,12 +2499,52 @@
 								"stops",
 								"1"
 							]
-						}
+						},
+						"description": "Cancel a stop request. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Area",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and area fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"        pm.expect(json).to.have.property(\"area\");\r",
+									"        pm.expect(json.area).to.have.property(\"id\");\r",
+									"        pm.expect(json.area).to.have.property(\"name\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1288,12 +2578,52 @@
 								"resident",
 								"area"
 							]
-						}
+						},
+						"description": "Update the resident's area. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Street",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and street fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"        pm.expect(json).to.have.property(\"street\");\r",
+									"        pm.expect(json.street).to.have.property(\"id\");\r",
+									"        pm.expect(json.street).to.have.property(\"name\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1327,12 +2657,49 @@
 								"resident",
 								"street"
 							]
-						}
+						},
+						"description": "Update the resident's street. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update House Number",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1366,12 +2733,50 @@
 								"resident",
 								"house_number"
 							]
-						}
+						},
+						"description": "Update the resident's house number. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Username",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and username fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"        pm.expect(json).to.have.property(\"username\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1405,12 +2810,50 @@
 								"resident",
 								"username"
 							]
-						}
+						},
+						"description": "Update the resident's username. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Update Username Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message and username fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\");\r",
+									"        pm.expect(json).to.have.property(\"username\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1444,12 +2887,62 @@
 								"resident",
 								"username"
 							]
-						}
+						},
+						"description": "Update the resident's username. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Get Driver Status and Location",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check that the status code is valid (200 or 404)\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);\r",
+									"});\r",
+									"\r",
+									"// Parse JSON response\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// If status is 200, validate response fields\r",
+									"if (pm.response.code === 200) {\r",
+									"    // Check that driver_status field exists\r",
+									"    pm.test(\"Response has driver_status\", function () {\r",
+									"        pm.expect(json).to.have.property(\"driver_status\");\r",
+									"    });\r",
+									"\r",
+									"    // Check that the message is correct\r",
+									"    pm.test(\"Message is correct\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Driver status retrieved\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// If status is 404, check for error field\r",
+									"if (pm.response.code === 404) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Check unauthorized if no token\r",
+									"pm.test(\"Unauthorized if no token\", function () {\r",
+									"    const authHeader = pm.request.headers.get(\"Authorization\");\r",
+									"    if (!authHeader) {\r",
+									"        pm.expect(pm.response.code).to.eql(401);\r",
+									"        pm.expect(json).to.have.property(\"msg\"); // JWT error message key\r",
+									"    }\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -1475,7 +2968,8 @@
 								"get-driver-status",
 								"2"
 							]
-						}
+						},
+						"description": "Retrieve the current status and location of a driver. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				}
@@ -1491,10 +2985,30 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Save access_token to environment variable if present\r",
 									"let response = pm.response.json();\r",
 									"if(response.access_token){\r",
 									"    pm.environment.set(\"jwt_resident_token\", response.access_token);\r",
 									"}\r",
+									"\r",
+									"// Check status code\r",
+									"pm.test(\"Status is 200 or 401\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401]);\r",
+									"});\r",
+									"\r",
+									"// Check response for successful login\r",
+									"pm.test(\"Response has access_token on success\", function () {\r",
+									"    if (pm.response.code === 200) {\r",
+									"        pm.expect(response).to.have.property(\"access_token\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Check error message for failed login\r",
+									"pm.test(\"Error message on failure\", function () {\r",
+									"    if (pm.response.code === 401) {\r",
+									"        pm.expect(response).to.have.property(\"message\", \"bad username or password given\");\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -1524,12 +3038,50 @@
 								"api",
 								"login"
 							]
-						}
+						},
+						"description": "Logs a resident user in using username and password.  \nReturns a JWT access_token on success.  \nReturns 401 if credentials are invalid."
 					},
 					"response": []
 				},
 				{
 					"name": "Subscribe to Street",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 403]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 201) {\r",
+									"    pm.test(\"Response has message and street_id fields\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Subscribed successfully\");\r",
+									"        pm.expect(json).to.have.property(\"street_id\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([400, 403].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -1557,12 +3109,49 @@
 								"api",
 								"subscriptions"
 							]
-						}
+						},
+						"description": "Subscribe the logged-in resident to a street. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "Unsubscribe to Street",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Unsubscribed successfully\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -1590,12 +3179,49 @@
 								"api",
 								"subscriptions"
 							]
-						}
+						},
+						"description": "Unsubscribe the logged-in resident from a street. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				},
 				{
 					"name": "View All Subscriptions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -1614,7 +3240,8 @@
 								"api",
 								"subscriptions"
 							]
-						}
+						},
+						"description": "Retrieve all street subscriptions of the logged-in resident. Resident role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
 				}
@@ -1630,10 +3257,30 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"// Save access_token to environment variable if present\r",
 									"let response = pm.response.json();\r",
 									"if(response.access_token){\r",
 									"    pm.environment.set(\"jwt_resident_token\", response.access_token);\r",
 									"}\r",
+									"\r",
+									"// Check status code\r",
+									"pm.test(\"Status is 200 or 401\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401]);\r",
+									"});\r",
+									"\r",
+									"// Check response for successful login\r",
+									"pm.test(\"Response has access_token on success\", function () {\r",
+									"    if (pm.response.code === 200) {\r",
+									"        pm.expect(response).to.have.property(\"access_token\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Check error message for failed login\r",
+									"pm.test(\"Error message on failure\", function () {\r",
+									"    if (pm.response.code === 401) {\r",
+									"        pm.expect(response).to.have.property(\"message\", \"bad username or password given\");\r",
+									"    }\r",
+									"});\r",
 									""
 								],
 								"type": "text/javascript",
@@ -1669,12 +3316,59 @@
 								"api",
 								"login"
 							]
-						}
+						},
+						"description": "Logs a resident user in using username and password.  \nReturns a JWT access_token on success.  \nReturns 401 if credentials are invalid."
 					},
 					"response": []
 				},
 				{
 					"name": "Get All Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check status code\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"// Parse JSON\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"// If status is 200, validate response array\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response is an array of notifications\", function () {\r",
+									"        pm.expect(json).to.be.an(\"array\");\r",
+									"        if (json.length > 0) {\r",
+									"            pm.expect(json[0]).to.have.property(\"id\");\r",
+									"            pm.expect(json[0]).to.have.property(\"is_read\");\r",
+									"            pm.expect(json[0]).to.have.property(\"message\");\r",
+									"            // Removed created_at check since it's not returned\r",
+									"        }\r",
+									"    });\r",
+									"\r",
+									"    pm.test(\"Message key is not present in array response\", function () {\r",
+									"        pm.expect(json).to.not.have.property(\"message\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"// Unauthorized check\r",
+									"pm.test(\"Unauthorized if no token\", function () {\r",
+									"    const authHeader = pm.request.headers.get(\"Authorization\");\r",
+									"    if (!authHeader) {\r",
+									"        pm.expect(pm.response.code).to.eql(401);\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    }\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -1698,12 +3392,49 @@
 								"api",
 								"notifications"
 							]
-						}
+						},
+						"description": "Retrieve all notifications for the logged-in resident.  \nRequires JWT access_token in Authorization header.  \nResident role required."
 					},
 					"response": []
 				},
 				{
 					"name": "Mark Notifications As Read",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is valid\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 403, 404]);\r",
+									"});\r",
+									"\r",
+									"if (pm.response.code === 200) {\r",
+									"    pm.test(\"Response has message field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"message\", \"Notification marked as read\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if ([400, 403, 404].includes(pm.response.code)) {\r",
+									"    pm.test(\"Error response has error field\", function () {\r",
+									"        pm.expect(json).to.have.property(\"error\");\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"if (pm.response.code === 401) {\r",
+									"    pm.test(\"Unauthorized response has msg\", function () {\r",
+									"        pm.expect(json).to.have.property(\"msg\");\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -1728,7 +3459,8 @@
 								"notifications",
 								"1"
 							]
-						}
+						},
+						"description": "Mark a specific notification as read for the logged-in resident.  \nRequires JWT access_token in Authorization header.  \nResident role required."
 					},
 					"response": []
 				}
