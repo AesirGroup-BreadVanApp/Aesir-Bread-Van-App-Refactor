@@ -7,7 +7,8 @@ from .resident import resident_views
 from .notification import notification_views
 from .subscription import subscription_views
 from .admin import setup_admin, admin_views
+from .driver import driver_views
 
 
-views = [user_views, index_views, auth_views, resident_views, notification_views, subscription_views, admin_views]
+views = [user_views, index_views, auth_views, resident_views, notification_views, subscription_views, admin_views, driver_views]
 # blueprints must be added to this list
