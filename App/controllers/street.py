@@ -16,7 +16,7 @@ def create_street(name, area_id):
 
 
 def get_all_streets():
-    streets = Street.query.options(joinedload(Street.area)).all()
+    streets = Street.query.all()
     return [str(street) for street in streets]
 
 

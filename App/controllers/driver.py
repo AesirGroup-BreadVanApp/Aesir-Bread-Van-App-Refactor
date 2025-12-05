@@ -61,7 +61,7 @@ def update_driver_username(driver_id, new_username):
     return driver
 
 
-def update_area_info(driver_id, new_area_id):
+def update_driver_area_info(driver_id, new_area_id):
     driver = Driver.query.get(driver_id)
     if not driver:
         raise ResourceNotFound(f"Driver with ID '{driver_id}' does not exist")
@@ -75,7 +75,7 @@ def update_area_info(driver_id, new_area_id):
     return driver
 
 
-def update_street_info(driver_id, new_street_id):
+def update_driver_street_info(driver_id, new_street_id):
     driver = Driver.query.get(driver_id)
     if not driver:
         raise ResourceNotFound(f"Driver with ID '{driver_id}' does not exist")

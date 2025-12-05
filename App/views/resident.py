@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, current_user
 from App.controllers.resident import (
-    update_area_info,
-    update_street_info,
+    update_resident_area_info,
+    update_resident_street_info,
     update_house_number,
     update_resident_username,
 )
@@ -64,7 +64,7 @@ def update_area_api():
     
     data = request.json
     try:
-        resident = update_area_info(current_user.id, data['area_id'])
+        resident = update_resident_area_info(current_user.id, data['area_id'])
         area = resident.area
         return jsonify(message=f"Area name updated to {area}", area=area.get_json()), 200
     except ResourceNotFound as e:
@@ -78,7 +78,7 @@ def update_street_api():
     
     data = request.json
     try:
-        resident = update_street_info(current_user.id, data['street_id'])
+        resident = update_resident_street_info(current_user.id, data['street_id'])
         street = resident.street
         return jsonify(message=f"Street name updated to {street}", street=street.get_json()), 200
     except ResourceNotFound as e:

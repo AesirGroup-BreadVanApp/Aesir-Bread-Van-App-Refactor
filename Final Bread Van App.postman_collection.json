@@ -3,8 +3,8 @@
 		"_postman_id": "358e804b-fd06-428d-a351-6c635e48205b",
 		"name": "Final Bread Van App",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "41545087",
-		"_collection_link": "https://blue-crater-933885.postman.co/workspace/Aesir---Bread-Van-Application-W~c427933c-1f55-4775-82fe-5a8dddb26e37/collection/41545087-358e804b-fd06-428d-a351-6c635e48205b?action=share&source=collection_link&creator=41545087"
+		"_exporter_id": "41534138",
+		"_collection_link": "https://blue-crater-933885.postman.co/workspace/Aesir---Bread-Van-Application-W~c427933c-1f55-4775-82fe-5a8dddb26e37/collection/41545087-358e804b-fd06-428d-a351-6c635e48205b?action=share&source=collection_link&creator=41534138"
 	},
 	"item": [
 		{
@@ -575,7 +575,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{base_url}}/api/admin/areas/2",
+							"raw": "{{base_url}}/api/admin/areas/3",
 							"host": [
 								"{{base_url}}"
 							],
@@ -583,7 +583,7 @@
 								"api",
 								"admin",
 								"areas",
-								"2"
+								"3"
 							]
 						},
 						"description": "Delete an area by ID. Admin role required.  \nRequires JWT access_token in Authorization header."
@@ -1402,7 +1402,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"area_id\": 1,\r\n  \"street_id\": 2,\r\n  \"date\": \"2025-12-05\",\r\n  \"time\": \"09:00\",\r\n  \"items\": [\r\n    {\"item_id\": 1, \"quantity\": 10},\r\n    {\"item_id\": 2, \"quantity\": 5}\r\n  ]\r\n}\r\n"
+							"raw": "{\r\n  \"area_id\": 1,\r\n  \"street_id\": 2,\r\n  \"date\": \"2026-12-05\",\r\n  \"time\": \"09:00\",\r\n  \"items\": [\r\n    {\"item_id\": 1, \"quantity\": 10},\r\n    {\"item_id\": 2, \"quantity\": 5}\r\n  ]\r\n}\r\n"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/driver/schedule-drive",
