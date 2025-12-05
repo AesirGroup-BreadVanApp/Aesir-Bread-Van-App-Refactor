@@ -1,13 +1,205 @@
 {% extends "layout.html" %}
-{% block title %}Flask MVC App{% endblock %}
-{% block page %}Flask MVC App{% endblock %}
+{% block title %}Aesir Bread Van API{% endblock %}
+{% block page %}Aesir Bread Van API{% endblock %}
 
 {{ super() }}
 
 {% block content %}
-    <h1>Flask MVC</h1>
-    {% if is_authenticated %}
-        <p> Welcome {{current_user.username}} </p>
-    {% endif %}
-    <p>This is a boileplate flask application which follows the MVC pattern for structuring the project.</p>
+<h1>Aesir Bread Van API</h1>
+{% if is_authenticated %}
+<p> Welcome {{current_user.username}} </p>
+{% endif %}
+<p>Welcome to the Aesir Bread Van Application API. Below is a comprehensive list of available endpoints.</p>
+
+<div class="row">
+    <div class="col s12">
+        <h3>API Documentation</h3>
+        <ul class="collapsible popout">
+            <!-- Authentication -->
+            <li class="active">
+                <div class="collapsible-header"><i class="material-icons">security</i>Authentication</div>
+                <div class="collapsible-body">
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/login</strong> - User Login
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/api/identify</strong> - Identify Logged-in User
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/api/logout</strong> - User Logout
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Admin -->
+            <li>
+                <div class="collapsible-header"><i class="material-icons">supervisor_account</i>Admin Management</div>
+                <div class="collapsible-body">
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/admin/drivers</strong> - Manage Drivers
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge red white-text">DELETE</span>
+                            <strong>/api/admin/drivers/&lt;id&gt;</strong> - Delete Driver
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/admin/residents</strong> - Manage Residents
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge red white-text">DELETE</span>
+                            <strong>/api/admin/residents/&lt;id&gt;</strong> - Delete Resident
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/admin/areas</strong> - Manage Areas
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge red white-text">DELETE</span>
+                            <strong>/api/admin/areas/&lt;id&gt;</strong> - Delete Area
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/admin/streets</strong> - Manage Streets
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge red white-text">DELETE</span>
+                            <strong>/api/admin/streets/&lt;id&gt;</strong> - Delete Street
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Driver -->
+            <li>
+                <div class="collapsible-header"><i class="material-icons">directions_bus</i>Driver Operations</div>
+                <div class="collapsible-body">
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/driver/schedule-drive</strong> - Schedule New Drive
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/api/driver/drives</strong> - View My Drives
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/driver/drives/&lt;id&gt;/start</strong> - Start Drive
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/driver/drives/&lt;id&gt;/complete</strong> - Complete Drive
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/driver/drives/&lt;id&gt;/cancel</strong> - Cancel Drive
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/driver/drives/&lt;id&gt;/add-item</strong> - Add Item to Drive
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/driver/drives/&lt;id&gt;/remove-item</strong> - Remove Item from Drive
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/driver/status</strong> - Update Duty Status
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Resident -->
+            <li>
+                <div class="collapsible-header"><i class="material-icons">home</i>Resident Services</div>
+                <div class="collapsible-body">
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/resident/stops</strong> - Request Stop
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/api/resident/stops</strong> - View Requested Stops
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge red white-text">DELETE</span>
+                            <strong>/api/resident/stops/&lt;id&gt;</strong> - Cancel Request
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge blue white-text">POST</span>
+                            <span class="badge green white-text">GET</span>
+                            <span class="badge red white-text">DELETE</span>
+                            <strong>/api/subscriptions</strong> - Manage Street Subscriptions
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/api/notifications</strong> - View Notifications
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/notifications/&lt;id&gt;</strong> - Mark Notification Read
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/api/resident/get-driver-status/&lt;id&gt;</strong> - Get Driver Status
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/resident/area</strong> - Update Area Info
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge orange white-text">PUT</span>
+                            <strong>/api/resident/street</strong> - Update Street Info
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- User -->
+            <li>
+                <div class="collapsible-header"><i class="material-icons">person</i>User Management</div>
+                <div class="collapsible-body">
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <span class="badge blue white-text">POST</span>
+                            <strong>/api/users</strong> - Users
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- System -->
+            <li>
+                <div class="collapsible-header"><i class="material-icons">settings</i>System</div>
+                <div class="collapsible-body">
+                    <ul class="collection">
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/init</strong> - Initialize Database
+                        </li>
+                        <li class="collection-item">
+                            <span class="badge green white-text">GET</span>
+                            <strong>/health</strong> - Health Check
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
 {% endblock %}
