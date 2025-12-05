@@ -53,7 +53,7 @@ def update_resident_username(resident_id, new_username):
     return resident
 
 
-def update_area_info(resident_id, new_area_id):
+def update_resident_area_info(resident_id, new_area_id):
     resident = Resident.query.get(resident_id)
     if not resident:
         raise ResourceNotFound("Resident not found")
@@ -67,7 +67,7 @@ def update_area_info(resident_id, new_area_id):
     return resident
 
 
-def update_street_info(resident_id, new_street_id):
+def update_resident_street_info(resident_id, new_street_id):
     resident = Resident.query.get(resident_id)
     if not resident:
         raise ResourceNotFound("Resident not found")

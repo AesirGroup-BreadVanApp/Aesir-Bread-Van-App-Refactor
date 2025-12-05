@@ -33,7 +33,7 @@ class Driver(User):
         self.street_id = street_id
 
     def __repr__(self):
-        return f"ID: {self.id} | Driver: {self.username} | Status: {self.status} | Area ID: {self.area_id} | Street ID: {self.street_id}"
+        return f"Driver ID: {self.id} | Driver: {self.username} | Status: {self.status} | Area ID: {self.area_id} | Street ID: {self.street_id}"
 
     def get_json(self):
         return {

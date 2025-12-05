@@ -27,7 +27,7 @@ class Resident(User):
         self.house_number = house_number
 
     def __repr__(self):
-        return f"ID: {self.id} | Username: {self.username} | Area: {self.area.name} | Street: {self.street.name} | House Number: {self.house_number}"
+        return f"Resident ID: {self.id} | Username: {self.username} | Area: {self.area.name} | Street: {self.street.name} | House Number: {self.house_number}"
 
     def get_json(self):
         return {

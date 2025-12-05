@@ -14,8 +14,8 @@ from App.controllers.drive import (
 from App.controllers.driver import (
     update_driver_status,
     update_driver_username,
-    update_area_info,
-    update_street_info,
+    update_driver_area_info,
+    update_driver_street_info,
 )
 from App.exceptions import ResourceNotFound, ValidationError
 
@@ -56,7 +56,7 @@ def get_drives_api():
         return jsonify(error="Forbidden"), 403
     try:
         drives = view_drives(current_user.id)
-        return jsonify([drive.get_json() for drive in drives])
+        return jsonify([drive.get_json() for drive in drives]), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
 
@@ -143,7 +143,7 @@ def update_area_api():
         return jsonify(error="Forbidden"), 403
     data = request.json
     try:
-        driver = update_area_info(current_user.id, data["area_id"])
+        driver = update_driver_area_info(current_user.id, data["area_id"])
         return jsonify(message="Area updated", area=driver.area.get_json()), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
@@ -155,7 +155,7 @@ def update_street_api():
         return jsonify(error="Forbidden"), 403
     data = request.json
     try:
-        driver = update_street_info(current_user.id, data["street_id"])
+        driver = update_driver_street_info(current_user.id, data["street_id"])
         return jsonify(message="Street updated", street=driver.street.get_json()), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404

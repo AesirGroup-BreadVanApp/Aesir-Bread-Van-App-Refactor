@@ -17,5 +17,8 @@ class Street(db.Model):
         self.name = name
         self.area_id = area_id
 
+    def __repr__(self):
+        return f"Street ID: {self.id} | Name: {self.name} | Area ID: {self.area_id}"
+
     def get_json(self):
         return {"id": self.id, "name": self.name, "area_id": self.area_id}

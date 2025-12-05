@@ -18,7 +18,7 @@ class DriveItem(db.Model):
         self.quantity = quantity
 
     def __repr__(self):
-        return f"ID: {self.id} | Drive ID: {self.drive_id} | Item ID: {self.item_id} | Quantity: {self.quantity}"
+        return f"DriveItem ID: {self.id} | Drive ID: {self.drive_id} | Item ID: {self.item_id} | Quantity: {self.quantity}"
 
     def get_json(self):
         return {

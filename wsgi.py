@@ -18,13 +18,8 @@ from App.controllers.notification import (
     get_notification_history,
     mark_notification_as_read,
 )
-from App.utils.cli_helpers import (
-    get_area_id,
-    get_street_id,
-    get_driver_id,
-    get_resident_id,
-    get_item_id,
-)
+from App.controllers.subscription import *
+from App.utils.cli_helpers import *
 
 # This commands file allow you to create convenient CLI commands for testing controllers
 
@@ -66,9 +61,9 @@ def create_user_command(username, password):
 @click.argument("format", default="string")
 def list_user_command(format):
     if format == "string":
-        print(get_all_users())
+        print_list_neatly(get_all_users(), heading="All Users")
     else:
-        print(get_all_users_json())
+        print_list_neatly(get_all_users_json(), heading="All Users (JSON)")
 
 
 app.cli.add_command(user_cli)  # add the group to the cli
@@ -146,9 +141,9 @@ def create_street_command(name, area_name):
 def list_drivers_command(format):
     try:
         if format == "string":
-            print(get_all_drivers())
+            print_list_neatly(get_all_drivers(), heading="All Drivers")
         else:
-            print(get_all_drivers_json())
+            print_list_neatly(get_all_drivers_json(), heading="All Drivers (JSON)")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -158,9 +153,9 @@ def list_drivers_command(format):
 def list_residents_command(format):
     try:
         if format == "string":
-            print(get_all_residents())
+            print_list_neatly(get_all_residents(), heading="All Residents")
         else:
-            print(get_all_residents_json())
+            print_list_neatly(get_all_residents_json(), heading="All Residents (JSON)")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -170,9 +165,9 @@ def list_residents_command(format):
 def list_areas_command(format):
     try:
         if format == "string":
-            print(get_all_areas())
+            print_list_neatly(get_all_areas(), heading="All Areas")
         else:
-            print(get_all_areas_json())
+            print_list_neatly(get_all_areas_json(), heading="All Areas (JSON)")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -182,9 +177,9 @@ def list_areas_command(format):
 def list_streets_command(format):
     try:
         if format == "string":
-            print(get_all_streets())
+            print_list_neatly(get_all_streets(), heading="All Streets")
         else:
-            print(get_all_streets_json())
+            print_list_neatly(get_all_streets_json(), heading="All Streets (JSON)")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -325,7 +320,8 @@ def view_drives_command(driver_username):
     try:
         driver_id = get_driver_id(driver_username)
         drives = view_drives(driver_id)
-        print(f"Drives for driver {driver_username}: {drives}")
+        heading = f"Drives for Driver: {driver_username}"
+        print_list_neatly(drives, heading)
     except Exception as e:
         print(f"Error: {e}")
 
@@ -339,7 +335,7 @@ def start_drive_command(driver_username, drive_id):
     try:
         driver_id = get_driver_id(driver_username)
         start_drive(driver_id, drive_id)
-        print(f"Drive started for driver {driver_username}!")
+        print(f"Drive {drive_id} started for driver {driver_username}!")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -354,7 +350,34 @@ def complete_drive_command(driver_username, drive_id):
     try:
         driver_id = get_driver_id(driver_username)
         complete_drive(driver_id, drive_id)
-        print(f"Drive completed for driver {driver_username}!")
+        print(f"Drive {drive_id} completed for driver {driver_username}!")
+    except Exception as e:
+        print(f"Error: {e}")
+
+@driver_cli.command(
+    "cancel-drive",
+    help="Cancels a drive, do cancel-drive <driver_username> <drive_id>",
+)
+@click.argument("driver_username")
+@click.argument("drive_id")
+def cancel_drive_command(driver_username, drive_id):
+    try:
+        driver_id = get_driver_id(driver_username)
+        cancel_drive(driver_id, drive_id)
+        print(f"Drive {drive_id} cancelled for driver {driver_username}!")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+@driver_cli.command("view-stop-requests", help="Views all stop requests for a driver's drive, do view-stop-requests <driver_username> <drive_id>")
+@click.argument("driver_username")
+@click.argument("drive_id")
+def view_stop_requests_command(driver_username, drive_id):
+    try:
+        driver_id = get_driver_id(driver_username)
+        stop_requests = view_stop_requests(driver_id, drive_id)
+        heading = f"Stop requests for Driver {driver_username} on Drive {drive_id}:"
+        print_list_neatly(stop_requests, heading)
     except Exception as e:
         print(f"Error: {e}")
 
@@ -383,42 +406,42 @@ def update_driver_status_command(driver_username, status):
 def update_username_command(driver_username, new_username):
     try:
         driver_id = get_driver_id(driver_username)
-        update_username(driver_id, new_username)
+        update_driver_username(driver_id, new_username)
         print(f"Username updated for driver {driver_username}!")
     except Exception as e:
         print(f"Error: {e}")
 
 
 @driver_cli.command(
-    "update-area-id",
-    help="Updates a driver's area ID, do update-area-id <driver_username> <area_name>",
+    "update-driver-area-info",
+    help="Updates a driver's area info, do update-driver-area-info <driver_username> <area_name>",
 )
 @click.argument("driver_username")
 @click.argument("area_name")
-def update_area_id_command(driver_username, area_name):
+def update_driver_area_info_command(driver_username, area_name):
     try:
         driver_id = get_driver_id(driver_username)
         area_id = get_area_id(area_name)
-        update_area_id(driver_id, area_id)
-        print(f"Area ID updated for driver {driver_username}!")
+        update_driver_area_info(driver_id, area_id)
+        print(f"Area info updated for driver {driver_username}!")
     except Exception as e:
         print(f"Error: {e}")
 
 
 @driver_cli.command(
-    "update-street-id",
-    help="Updates a driver's street ID, do update-street-id <driver_username> <street_name> <area_name>",
+    "update-driver-street-info",
+    help="Updates a driver's street info, do update-street-info <driver_username> <street_name> <area_name>",
 )
 @click.argument("driver_username")
 @click.argument("street_name")
 @click.argument("area_name")
-def update_street_id_command(driver_username, street_name, area_name):
+def update_driver_street_info_command(driver_username, street_name, area_name):
     try:
         driver_id = get_driver_id(driver_username)
         area_id = get_area_id(area_name)
         street_id = get_street_id(street_name, area_id)
-        update_street_id(driver_id, street_id)
-        print(f"Street ID updated for driver {driver_username}!")
+        update_driver_street_info(driver_id, street_id)
+        print(f"Street info updated for driver {driver_username}!")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -435,8 +458,25 @@ def add_drive_item_command(driver_username, drive_id, item_name, quantity):
     try:
         driver_id = get_driver_id(driver_username)
         item_id = get_item_id(item_name)
-        add_drive_item(drive_id, item_id, quantity)
+        add_drive_item(driver_id, drive_id, item_id, quantity)
         print(f"Item '{item_name}' added to drive {drive_id}!")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+@driver_cli.command(
+    "remove-drive-item",
+    help="Removes an item from a drive, do remove-drive-item <driver_username> <drive_id> <item_name>",
+)
+@click.argument("driver_username")
+@click.argument("drive_id")
+@click.argument("item_name")
+def remove_drive_item_command(driver_username, drive_id, item_name):
+    try:
+        driver_id = get_driver_id(driver_username)
+        item_id = get_item_id(item_name)
+        remove_drive_item(driver_id, drive_id, item_id)
+        print(f"Item '{item_name}' removed from drive {drive_id}!")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -450,7 +490,8 @@ def add_drive_item_command(driver_username, drive_id, item_name, quantity):
 def view_drive_items_command(driver_username, drive_id):
     try:
         items = get_drive_items(drive_id)
-        print(f"Items for drive {drive_id}: {items}")
+        heading = f"Drive Items for Driver: {driver_username} and Drive ID: {drive_id}"
+        print_list_neatly(items, heading)
     except Exception as e:
         print(f"Error: {e}")
 
@@ -490,7 +531,7 @@ def request_stop_command(resident_username, drive_id, message):
 def cancel_stop_command(resident_username, stop_id):
     try:
         resident_id = get_resident_id(resident_username)
-        cancel_stop(resident_id, stop_id)
+        cancel_stop(stop_id, resident_id)
         print(f"Stop cancelled for resident {resident_username}!")
     except Exception as e:
         print(f"Error: {e}")
@@ -513,34 +554,34 @@ def get_driver_status_and_location_command(driver_username):
 
 
 @resident_cli.command(
-    "update-area-info",
-    help="Updates an area, do update-area-info <resident_username> <new_area_name>",
+    "update-resident-area-info",
+    help="Updates an area, do update-resident-area-info <resident_username> <new_area_name>",
 )
 @click.argument("resident_username")
 @click.argument("new_area_name")
-def update_area_info_command(resident_username, new_area_name):
+def update_resident_area_info_command(resident_username, new_area_name):
     try:
         resident_id = get_resident_id(resident_username)
         new_area_id = get_area_id(new_area_name)
-        update_area_info(resident_id, new_area_id)
+        update_resident_area_info(resident_id, new_area_id)
         print(f"Area info updated for resident {resident_username}!")
     except Exception as e:
         print(f"Error: {e}")
 
 
 @resident_cli.command(
-    "update-street-info",
-    help="Updates a street, do update-street-info <resident_username> <new_street_name> <new_area_name>",
+    "update-resident-street-info",
+    help="Updates a street, do update-resident-street-info <resident_username> <new_street_name> <new_area_name>",
 )
 @click.argument("resident_username")
 @click.argument("new_street_name")
 @click.argument("new_area_name")
-def update_street_info_command(resident_username, new_street_name, new_area_name):
+def update_resident_street_info_command(resident_username, new_street_name, new_area_name):
     try:
         resident_id = get_resident_id(resident_username)
         new_area_id = get_area_id(new_area_name)
         new_street_id = get_street_id(new_street_name, new_area_id)
-        update_street_info(resident_id, new_street_id)
+        update_resident_street_info(resident_id, new_street_id)
         print(f"Street info updated for resident {resident_username}!")
     except Exception as e:
         print(f"Error: {e}")
@@ -570,7 +611,11 @@ def get_requested_stops_command(resident_username):
     try:
         resident_id = get_resident_id(resident_username)
         stops = get_requested_stops(resident_id)
-        print(f"Requested stops for resident {resident_username}: {stops}")
+        heading = f"Requested stops for resident {resident_username}"
+        if not stops:
+            print(f"No stops found for resident {resident_username}")
+            return
+        print_list_neatly(stops, heading)
     except Exception as e:
         print(f"Error: {e}")
 
@@ -584,20 +629,15 @@ def get_notifications_command(resident_username):
     try:
         resident_id = get_resident_id(resident_username)
         notifications = get_notification_history(resident_id)
-        notifications = get_notification_history(resident_id)
+        heading = f"Notifications for Resident: {resident_username}"
         if not notifications:
             print(f"No notifications found for resident {resident_username}")
             return
-
-        print(f"Notifications for resident {resident_username}:")
-        print("-" * 50)
         for notification in notifications:
-            status = "Read" if notification.get("is_read") else "Unread"
-            print(f"ID: {notification.get('id')}")
-            print(f"Time: {notification.get('timestamp')}")
-            print(f"Status: {status}")
-            print(f"Message: {notification.get('message')}")
-            print("-" * 50)
+            print("-" * 102)
+            print(notification)
+            print("-" * 102)
+
     except Exception as e:
         print(f"Error: {e}")
 
@@ -616,6 +656,33 @@ def read_notification_command(resident_username, notification_id):
     except Exception as e:
         print(f"Error: {e}")
 
+@resident_cli.command("subscribe-to-street", help="Subscribes a resident to a street, do subscribe-to-street <resident_username> <street_name> <area_name>")
+@click.argument("resident_username")
+@click.argument("street_name")
+@click.argument("area_name")
+def subscribe_to_street_command(resident_username, street_name, area_name):
+    try:
+        resident_id = get_resident_id(resident_username)
+        area_id = get_area_id(area_name)
+        street_id = get_street_id(street_name, area_id)
+        subscribe_to_street(resident_id, street_id)
+        print(f"Resident {resident_username} subscribed to street {street_name} in area {area_name}!")
+    except Exception as e:
+        print(f"Error: {e}")
+
+@resident_cli.command("unsubscribe-from-street", help="Unsubscribes a resident from a street, do unsubscribe-to-street <resident_username> <street_name> <area_name>")
+@click.argument("resident_username")
+@click.argument("street_name")
+@click.argument("area_name")
+def unsubscribe_to_street_command(resident_username, street_name, area_name):
+    try:
+        resident_id = get_resident_id(resident_username)
+        area_id = get_area_id(area_name)
+        street_id = get_street_id(street_name, area_id)
+        unsubscribe_from_street(resident_id, street_id)
+        print(f"Resident {resident_username} unsubscribed from street {street_name} in area {area_name}!")
+    except Exception as e:
+        print(f"Error: {e}")
 
 app.cli.add_command(resident_cli)
 
@@ -713,3 +780,18 @@ def delete_item_command(item_id):
 
 
 app.cli.add_command(item_cli)
+
+
+def print_list_neatly(items, heading="Items"):
+    if not items:
+        click.echo(f"\n--- {heading.strip()} ---")
+        click.echo("No items to display.")
+        click.echo("-" * (len(heading) + 4) + "\n")
+        return
+    item_strings = [str(item) for item in items]
+    max_item_length = max(len(s) for s in item_strings)
+    heading_length = max(len(heading), max_item_length, 30)
+    print("\n" + heading.center(heading_length, "-"))
+    for item in item_strings:
+        print(item)
+    print("-" * heading_length + "\n")

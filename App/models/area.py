@@ -12,5 +12,8 @@ class Area(db.Model):
     def __init__(self, name):
         self.name = name
 
+    def __repr__(self):
+        return f"Area ID: {self.id} | Name: {self.name}"
+
     def get_json(self):
         return {"id": self.id, "name": self.name}

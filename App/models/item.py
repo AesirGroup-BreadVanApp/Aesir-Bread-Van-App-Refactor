@@ -15,7 +15,7 @@ class Item(db.Model):
         self.tags = tags
 
     def __repr__(self):
-        return f"ID: {self.id} | Name: {self.name} | Price: {self.price}"
+        return f"Item ID: {self.id} | Name: {self.name} | Price: {self.price}"
 
     def get_json(self):
         return {

@@ -7,6 +7,7 @@ from App.controllers.street import create_street
 from App.controllers.drive import add_drive_item, schedule_drive
 from App.controllers.subscription import subscribe_to_street
 from App.controllers.item import create_item
+from App.models.enums import DriverStatus
 
 
 def initialize():
@@ -19,21 +20,22 @@ def initialize():
     db.session.commit()
     print("Admin created: admin/adminpass")
 
-    # Create Area
-    area = create_area("Downtown")
-    print(f"Area created: {area.name}")
+    # Create area1
+    area1 = create_area("Downtown")
+    area2 = create_area("Middletown")
+    print(f"Areas created: {area1.name}, {area2.name}")
 
     # Create Streets
-    main_st = create_street("Main St", area.id)
-    first_ave = create_street("First Ave", area.id)
-    print(f"Streets created: {main_st.name}, {first_ave.name}")
+    main_st = create_street("Main St", area1.id)
+    first_ave = create_street("First Ave", area1.id)
+    print(f"Streets created: {main_st.name} in {area1.name}, {first_ave.name} in {area1.name}")
 
     # Create Driver
-    driver = create_driver("driver1", "driverpass")
+    driver = create_driver("driver1", "driverpass", DriverStatus.OFF_DUTY.value, area1.id, first_ave.id)
     print(f"Driver created: {driver.username}/driverpass")
 
     # Create Resident
-    resident = create_resident("resident1", "residentpass", area.id, main_st.id, 101)
+    resident = create_resident("resident1", "residentpass", area1.id, main_st.id, 101)
     print(f"Resident created: {resident.username}/residentpass")
 
     # Create Items
@@ -57,7 +59,7 @@ def initialize():
     # Schedule a Drive (triggers notification)
     drive = schedule_drive(
         driver_id=driver.id,
-        area_id=area.id,
+        area_id=area1.id,
         street_id=main_st.id,
         date_str="2025-12-26",
         time_str="10:00",
