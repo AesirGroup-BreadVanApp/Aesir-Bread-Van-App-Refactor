@@ -193,8 +193,9 @@ def update_username_api():
 def view_stop_requests_api():
     if not driver_required():
         return jsonify(error="Forbidden"), 403
+    data = request.json
     try:
-        stop_requests = view_stop_requests(current_user.id)
+        stop_requests = view_stop_requests(current_user.id, data["drive_id"])
         return jsonify([req.get_json() for req in stop_requests]), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
