@@ -547,7 +547,7 @@ def get_driver_status_and_location_command(driver_username):
         driver_id = get_driver_id(driver_username)
         driver_status_and_location = get_driver_status_and_location(driver_id)
         print(
-            f"Driver status and location for {driver_username}: {driver_status_and_location}"
+             f"Driver status and location for {driver_username}: Status: {driver_status_and_location['status']} | Location: {driver_status_and_location['current_location']}"
         )
     except Exception as e:
         print(f"Error: {e}")
