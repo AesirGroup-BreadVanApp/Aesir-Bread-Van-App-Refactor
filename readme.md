@@ -1,171 +1,147 @@
-# 🍞 Bread Van App CLI
-This project provides a command-line interface (CLI) for managing and interacting with the Bread Van App.
- It is built with Flask CLI and click, and supports multiple roles: Admin, Driver, and Resident.
+# Aesir Bread Van App CLI Reference
 
-## 🚀 Setup
-### Install dependencies:
-```bash
-$ pip install -r requirements.txt
+This document provides a comprehensive guide to the Command Line Interface (CLI) commands available in the Aesir Bread Van application. These commands are defined in `wsgi.py` and can be executed using the Flask CLI.
+
+## Prerequisites
+
+Ensure you have your virtual environment activated and the dependencies installed.
+
+```
+pip install -r requirements.txt
 ```
 
-### Initialize the database:
-```bash
-flask init
-```
-This creates and initializes all accounts and tables.
-* Admin
-  * admin / adminpass
-* Drivers
-  * bob / bobpass
-  * mary / marypass
-* Residents
-  * alice / alicepass
-  * jane / janepass
-  * john / johnpass
+## Global Commands
 
-### Run any CLI command using:
-```bash
-flask <group> <command> [args...]
-```
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `init` | Creates and initializes the database. | `flask init` |
 
+## User Commands (`user`)
 
-## 👤 User Commands | Group: flask user
-### Login
-```bash
- flask user login <username> <password>
-```
+Group for user management commands.
 
-### Logout
-```bash
-flask user logout
-```
+| Command | Description | Arguments | Usage |
+|---------|-------------|-----------|-------|
+| `create` | Creates a new user. | `username` (default: rob), `password` (default: robpass) | `flask user create <username> <password>` |
+| `list` | Lists all users. | `format` (default: string, options: string, json) | `flask user list [format]` |
 
-### View Drives on a Street
-```bash
-flask user view_street_drives
-```
-Prompts to select an area and street, then lists scheduled drives.
+## Admin Commands (`admin`)
 
+Group for administrative tasks, including managing drivers, residents, areas, and streets.
 
+### Creation
 
-## 🛠️ Admin Commands | Group: flask admin
-Admins manage drivers, areas, and streets.
-### List Users
-```bash
-flask admin list
-```
+| Command           | Description                      | Arguments                                                                           | Usage                                                                                        |
+| ----------------- | -------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `create-driver`   | Creates a new driver.            | `username`, `password`, `status` ('Off Duty'/'On Duty'), `area_name`, `street_name` | `flask admin create-driver <username> <password> <status> <area_name> <street_name>`         |
+| `create-resident` | Creates a new resident.          | `username`, `password`, `area_name`, `street_name`, `house_number`                  | `flask admin create-resident <username> <password> <area_name> <street_name> <house_number>` |
+| `create-area`     | Creates a new area.              | `name`                                                                              | `flask admin create-area <name>`                                                             |
+| `create-street`   | Creates a new street in an area. | `name`, `area_name`                                                                 | `flask admin create-street <name> <area_name>`                                               |
 
-### Create Driver
-```bash
-flask admin create_driver <username> <password>
-```
+### Listing
 
-### Delete Driver
-```bash
-flask admin delete_driver <driver_id>
-```
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `list-drivers` | Lists all drivers. | `flask admin list-drivers [format]` |
+| `list-residents` | Lists all residents. | `flask admin list-residents [format]` |
+| `list-areas` | Lists all areas. | `flask admin list-areas [format]` |
+| `list-streets` | Lists all streets. | `flask admin list-streets [format]` |
 
-### Add Area
-```bash
-flask admin add_area <name>
-```
+### Updates
 
-### Add Street
-```bash
-flask admin add_street <area_id> <name>
-```
+| Command         | Description            | Arguments               | Usage                                              |
+| --------------- | ---------------------- | ----------------------- | -------------------------------------------------- |
+| `update-street` | Updates a street name. | `street_id`, `new_name` | `flask admin update-street <street_id> <new_name>` |
+| `update-area`   | Updates an area name.  | `area_id`, `new_name`   | `flask admin update-area <area_id> <new_name>`     |
 
-### Delete Area
-```bash
-flask admin delete_area <area_id>
-```
+### Deletion
 
-### Delete Street
-```bash
-flask admin delete_street <street_id>
-```
+| Command | Description | Arguments | Usage |
+|---------|-------------|-----------|-------|
+| `delete-driver` | Deletes a driver. | `driver_id` | `flask admin delete-driver <id>` |
+| `delete-resident` | Deletes a resident. | `resident_id` | `flask admin delete-resident <id>` |
+| `delete-area` | Deletes an area. | `area_id` | `flask admin delete-area <id>` |
+| `delete-street` | Deletes a street. | `street_id` | `flask admin delete-street <id>` |
 
-### View All Areas
-```bash
-flask admin view_all_areas
-```
+## Driver Commands (`driver`)
 
-### View All Streets
-```bash
-flask admin view_all_streets
-```
+Group for driver-specific operations and drive management.
 
+### Drive Management
 
-## 🚐 Driver Commands | Group: flask driver
-Drivers manage drives and stops.
-### Schedule Drive
-```bash
-flask driver schedule_drive YYYY-MM-DD HH:MM
-```
-Prompts to select area & street.
-Drives cannot be scheduled in the past nor more than 1 year ahead of the current date.
+| Command          | Description                | Arguments                                                         | Usage                                                                                       |
+| ---------------- | -------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `schedule-drive` | Schedules a new drive.     | `username`, `area`, `street`, `date`, `time`, `--item` (multiple) | `flask driver schedule-drive <driver_username> <area> <street> <date> <time> -i "Name:Qty"` |
+| `view-drives`    | Views drives for a driver. | `driver_username`                                                 | `flask driver view-drives <driver_username>`                                                |
+| `start-drive`    | Starts a scheduled drive.  | `driver_username`, `drive_id`                                     | `flask driver start-drive <driver_username> <drive_id>`                                     |
+| `complete-drive` | Completes a drive.         | `driver_username`, `drive_id`                                     | `flask driver complete-drive <driver_username> <drive_id>`                                  |
+| `cancel-drive`   | Cancels a drive.           | `driver_username`, `drive_id`                                     | `flask driver cancel-drive <driver_username> <drive_id>`                                    |
 
+### Items & Requests
 
-### Cancel Drive
-```bash
-flask driver cancel_drive <drive_id>
-```
+| Command              | Description                      | Arguments                                              | Usage                                                                        |
+| -------------------- | -------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `view-stop-requests` | Views stop requests for a drive. | `driver_username`, `drive_id`                          | `flask driver view-stop-requests <driver_username> <drive_id>`               |
+| `add-drive-item`     | Adds an item to a drive.         | `driver_username`, `drive_id`, `item_name`, `quantity` | `flask driver add-drive-item <driver_username> <drive_id> <item_name> <qty>` |
+| `remove-drive-item`  | Removes an item from a drive.    | `driver_username`, `drive_id`, `item_name`             | `flask driver remove-drive-item <driver_username> <drive_id> <item_name>`    |
+| `view-drive-items`   | Views items in a drive.          | `driver_username`, `drive_id`                          | `flask driver view-drive-items <driver_username> <drive_id>`                 |
 
-### View My Drives
-```bash
-flask driver view_my_drives
-```
+### Profile Updates
 
-### Start Drive
-```bash
-flask driver start_drive <drive_id>
-```
+| Command                     | Description                       | Arguments                                          | Usage                                                                                |
+| --------------------------- | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `update-driver-status`      | Updates driver status.            | `driver_username`, `status` ('Off Duty'/'On Duty') | `flask driver update-driver-status <driver_username> <status>`                       |
+| `update-username`           | Updates driver username.          | `driver_username`, `new_username`                  | `flask driver update-username <driver_username> <new_username>`                      |
+| `update-driver-area-info`   | Updates driver's assigned area.   | `driver_username`, `area_name`                     | `flask driver update-driver-area-info <driver_username> <area_name>`                 |
+| `update-driver-street-info` | Updates driver's assigned street. | `driver_username`, `street_name`, `area_name`      | `flask driver update-driver-street-info <driver_username> <street_name> <area_name>` |
 
-### End Drive
-```bash
-flask driver end_drive
-```
+## Resident Commands (`resident`)
 
-### View Requested Stops
-```bash
-flask driver view_requested_stops <drive_id>
-```
+Group for resident interactions.
 
+### Stop Requests
 
-## 🏠 Resident Commands | Group: flask resident
-Residents can request stops and view their inbox.
-### Create Resident
-```bash
-flask resident create <username> <password>
-```
-Prompts for area, street, and house number. 
-A logged-in account is not required to create a resident.
+| Command               | Description                   | Arguments                                  | Usage                                                              |
+| --------------------- | ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| `request-stop`        | Requests a bus/van stop.      | `resident_username`, `drive_id`, `message` | `flask resident request-stop <resident_username> <drive_id> <msg>` |
+| `cancel-stop`         | Cancels a stop request.       | `resident_username`, `stop_id`             | `flask resident cancel-stop <resident_username> <stop_id>`         |
+| `get-requested-stops` | Gets list of requested stops. | `resident_username`                        | `flask resident get-requested-stops <resident_username>            |
 
-### Request Stop
-```bash
-flask resident request_stop
-```
+### Information & Updates
 
-### Cancel Stop
-```bash
-flask resident cancel_stop <drive_id>
-```
+| Command                          | Description                  | Arguments                                               | Usage                                                                                      |
+| -------------------------------- | ---------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `get-driver-status-and-location` | Gets status/loc of a driver. | `driver_username`                                       | `flask resident get-driver-status-and-location <driver_username>`                          |
+| `update-resident-area-info`      | Updates resident's area.     | `resident_username`, `new_area_name`                    | `flask resident update-resident-area-info <resident_username> <area_name>`                 |
+| `update-resident-street-info`    | Updates resident's street.   | `resident_username`, `new_street_name`, `new_area_name` | `flask resident update-resident-street-info <resident_username> <street_name> <area_name>` |
+| `update-house-number`            | Updates house number.        | `resident_username`, `new_house_number`                 | `flask resident update-house-number <resident_username> <new_house_number>`                |
 
-### View Inbox
-```bash
-flask resident view_inbox
-```
+### Notifications & Subscriptions
 
-### View Driver Stats
-```bash
-flask resident view_driver_stats <driver_id>
-```
+| Command                   | Description                      | Arguments                                       | Usage                                                                                |
+| ------------------------- | -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `get-notifications`       | Gets notification history.       | `resident_username`                             | `flask resident get-notifications <resident_username>`                               |
+| `read-notification`       | Marks a notification as read.    | `resident_username`, `notification_id`          | `flask resident read-notification <resident_username> <notification_id>`             |
+| `subscribe-to-street`     | Subscribes to street alerts.     | `resident_username`, `street_name`, `area_name` | `flask resident subscribe-to-street <resident_username> <street_name> <area_name>`   |
+| `unsubscribe-from-street` | Unsubscribes from street alerts. | `resident_username`, `street_name`, `area_name` | `flask resident unsubscribe-to-street <resident_username> <street_name> <area_name>` |
 
+## Item Commands (`item`)
 
-## 🔑 Role Requirements
-* flask admin ... → must be logged in as Admin
-* flask driver ... → must be logged in as Driver
-* flask resident ... → must be logged in as Resident
+Group for inventory item management.
 
+| Command       | Description               | Arguments                                            | Usage                                                 |
+| ------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| `create-item` | Creates a new item.       | `name`, `price`, `description`, `tags` (JSON string) | `flask item create-item <name> <price> <desc> <tags>` |
+| `list-items`  | Lists all items.          | `format`                                             | `flask item list-items [format]`                      |
+| `update-item` | Updates an existing item. | `item_id`, `[name]`, `[price]`, `[desc]`, `[tags]`   | `flask item update-item <id> [args]`                  |
+| `delete-item` | Deletes an item.          | `item_id`                                            | `flask item delete-item <id>`                         |
 
-General user commands (login/logout/view_street_drives) are available to all.
+## Test Commands (`test`)
+
+Commands for running the test suite.
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `all` | Runs all tests. | `flask test all` |
+| `unit` | Runs unit tests (App/tests/unit). | `flask test unit` |
+| `int` | Runs integration tests (App/tests/integration). | `flask test int` |
