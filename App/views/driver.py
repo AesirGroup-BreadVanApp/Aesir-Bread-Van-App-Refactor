@@ -10,6 +10,7 @@ from App.controllers.drive import (
     get_drive_items,
     add_drive_item,
     remove_drive_item,
+    view_stop_requests,
 )
 from App.controllers.driver import (
     update_driver_status,
@@ -21,8 +22,9 @@ from App.exceptions import ResourceNotFound, ValidationError
 
 driver_views = Blueprint("drive_views", __name__, template_folder="../templates")
 
+
 def driver_required():
-    if not current_user or current_user.role != 'driver':
+    if not current_user or current_user.role != "driver":
         return False
     return True
 
@@ -84,6 +86,7 @@ def complete_drive_api(drive_id):
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
 
+
 @driver_views.route("/api/driver/drives/<int:drive_id>/cancel", methods=["PUT"])
 @jwt_required()
 def cancel_drive_api(drive_id):
@@ -94,7 +97,7 @@ def cancel_drive_api(drive_id):
         return jsonify(message="Drive cancelled", drive=drive.get_json()), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
-    
+
 
 @driver_views.route("/api/driver/drives/<int:drive_id>/add-item", methods=["PUT"])
 @jwt_required()
@@ -103,8 +106,13 @@ def add_drive_item_api(drive_id):
         return jsonify(error="Forbidden"), 403
     data = request.json
     try:
-        drive_item = add_drive_item(current_user.id, drive_id, data["item_id"], data["quantity"])
-        return jsonify(message="Drive item added", drive_item=drive_item.get_json()), 201
+        drive_item = add_drive_item(
+            current_user.id, drive_id, data["item_id"], data["quantity"]
+        )
+        return (
+            jsonify(message="Drive item added", drive_item=drive_item.get_json()),
+            201,
+        )
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
     except DuplicateEntity as e:
@@ -119,7 +127,10 @@ def remove_drive_item_api(drive_id):
     data = request.json
     try:
         drive_item = remove_drive_item(current_user.id, drive_id, data["item_id"])
-        return jsonify(message="Drive item removed", drive_item=drive_item.get_json()), 200
+        return (
+            jsonify(message="Drive item removed", drive_item=drive_item.get_json()),
+            200,
+        )
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
 
@@ -136,6 +147,7 @@ def update_status_api():
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
 
+
 @driver_views.route("/api/driver/update-area", methods=["PUT"])
 @jwt_required()
 def update_area_api():
@@ -147,6 +159,7 @@ def update_area_api():
         return jsonify(message="Area updated", area=driver.area.get_json()), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
+
 
 @driver_views.route("/api/driver/update-street", methods=["PUT"])
 @jwt_required()
@@ -160,6 +173,7 @@ def update_street_api():
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
 
+
 @driver_views.route("/api/driver/update-username", methods=["PUT"])
 @jwt_required()
 def update_username_api():
@@ -170,5 +184,17 @@ def update_username_api():
         driver = update_driver_username(current_user.id, data["username"])
         username = driver.username
         return jsonify(message="Username updated", username=username), 200
+    except ResourceNotFound as e:
+        return jsonify(error=str(e)), 404
+
+
+@driver_views.route("/api/driver/stop-requests", methods=["GET"])
+@jwt_required()
+def view_stop_requests_api():
+    if not driver_required():
+        return jsonify(error="Forbidden"), 403
+    try:
+        stop_requests = view_stop_requests(current_user.id)
+        return jsonify([req.get_json() for req in stop_requests]), 200
     except ResourceNotFound as e:
         return jsonify(error=str(e)), 404
