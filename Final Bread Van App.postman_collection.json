@@ -3,8 +3,8 @@
 		"_postman_id": "358e804b-fd06-428d-a351-6c635e48205b",
 		"name": "Final Bread Van App",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "41534138",
-		"_collection_link": "https://blue-crater-933885.postman.co/workspace/Aesir---Bread-Van-Application-W~c427933c-1f55-4775-82fe-5a8dddb26e37/collection/41545087-358e804b-fd06-428d-a351-6c635e48205b?action=share&source=collection_link&creator=41534138"
+		"_exporter_id": "41545087",
+		"_collection_link": "https://blue-crater-933885.postman.co/workspace/Aesir---Bread-Van-Application-W~c427933c-1f55-4775-82fe-5a8dddb26e37/collection/41545087-358e804b-fd06-428d-a351-6c635e48205b?action=share&source=collection_link&creator=41545087"
 	},
 	"item": [
 		{
@@ -2234,6 +2234,95 @@
 						"description": "Update driver's username. Driver role required.  \nRequires JWT access_token in Authorization header."
 					},
 					"response": []
+				},
+				{
+					"name": "Get Stop Requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test if the status code is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Test if the response is a JSON array\r",
+									"pm.test(\"Response is a JSON array\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"// Test if each stop request has required fields\r",
+									"pm.test(\"Each stop request has required fields\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    if (jsonData.length > 0) {\r",
+									"        jsonData.forEach(function(req) {\r",
+									"            pm.expect(req).to.have.property(\"id\");\r",
+									"            pm.expect(req).to.have.property(\"resident_id\");\r",
+									"            pm.expect(req).to.have.property(\"drive_id\");\r",
+									"            pm.expect(req).to.have.property(\"street_id\");\r",
+									"            pm.expect(req).to.have.property(\"status\");\r",
+									"            pm.expect(req).to.have.property(\"requested_at\");\r",
+									"        });\r",
+									"    } else {\r",
+									"        console.log(\"No stop requests to check fields for.\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Test the number of stop requests (optional)\r",
+									"pm.test(\"Number of stop requests\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    console.log(\"Number of stop requests:\", jsonData.length);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{jwt_driver_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"drive_id\": 1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/driver/stop-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"driver",
+								"stop-requests"
+							]
+						},
+						"description": "Fetches all stop requests assigned to the logged-in driver."
+					},
+					"response": []
 				}
 			]
 		},
@@ -3465,6 +3554,37 @@
 					"response": []
 				}
 			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "",
+			"type": "default"
 		}
 	]
 }
