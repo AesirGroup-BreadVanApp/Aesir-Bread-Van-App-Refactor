@@ -54,7 +54,7 @@ def schedule_drive(
             add_drive_item(driver_id, new_drive.id, item["item_id"], item["quantity"], notify=False)
 
     # Format the message
-    message = f"Drive ID: {new_drive.id}, Bread Van scheduled for {street.name} on {date_str} at {time_str} with the following items:"
+    message = f"Drive ID: {new_drive.id}, Driver: {driver.username}, Bread Van scheduled for {street.name} on {date_str} at {time_str} with the following items:"
     drive_items = DriveItem.query.filter_by(drive_id=new_drive.id).all()
 
     for drive_item in drive_items:
